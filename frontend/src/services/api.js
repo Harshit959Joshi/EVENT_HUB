@@ -1,8 +1,9 @@
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
+// ✅ Base URL includes /api so frontend requests match backend routes
 const API = axios.create({
-  baseURL: 'https://event-hub-tty1.onrender.com', // ✅ fixed: must be a string
+  baseURL: 'https://event-hub-tty1.onrender.com/api', // include /api here
   withCredentials: true,
   timeout: 15000,
 });
@@ -21,7 +22,8 @@ API.interceptors.request.use(
 API.interceptors.response.use(
   (response) => response.data,
   (error) => {
-    const message = error.response?.data?.message || 'Something went wrong. Please try again.';
+    const message =
+      error.response?.data?.message || 'Something went wrong. Please try again.';
 
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
