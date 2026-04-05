@@ -31,17 +31,18 @@ const EventsPage = () => {
     try {
       const res = await eventsAPI.getAll({ ...params, limit: 12 });
 
-    // ✅ Ensure events is always an array
-    setEvents(res.events || res || []); 
-    
-    // ✅ Defensive pagination
-    setPagination({ 
-      total: res.total || (res?.length || 0),
-      pages: res.pages || 1,
-      page: res.page || 1
-    });
+      // ✅ Ensure events is always an array
+      setEvents(res?.events || []);
+
+      // ✅ Defensive pagination
+      setPagination({
+        total: res?.total || (res?.events?.length || 0),
+        pages: res?.pages || 1,
+        page: res?.page || 1,
+      });
     } catch (err) {
       console.error(err);
+      setEvents([]); // fallback if API fails
     } finally {
       setLoading(false);
     }
@@ -72,7 +73,7 @@ const EventsPage = () => {
       {/* Filters */}
       <EventFilters onFilter={handleFilter} loading={loading} />
 
-      {/* View mode toggle + sort */}
+      {/* View mode toggle + pagination info */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl">
           <button
@@ -93,15 +94,15 @@ const EventsPage = () => {
         </p>
       </div>
 
-      {/* Events grid */}
-        {loading ? (
+      {/* Events Grid / List */}
+      {loading ? (
         <div className={viewMode === 'grid'
-          ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'
-          : 'flex flex-col gap-4'
+          ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 min-h-[400px]' // min-height ensures skeleton is visible
+          : 'flex flex-col gap-4 min-h-[400px]'
         }>
           {Array.from({ length: 6 }).map((_, i) => <EventCardSkeleton key={i} />)}
         </div>
-      ) : (events?.length || 0) === 0 ? (   // <-- change here
+      ) : (events?.length || 0) === 0 ? (
         <EmptyState
           icon="🎭"
           title="No events found"
@@ -114,11 +115,12 @@ const EventsPage = () => {
           ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'
           : 'flex flex-col gap-4'
         }>
-          {events?.map((event, i) => (   // <-- change here
+          {events?.map((event, i) => (
             <EventCard key={event._id} event={event} index={i} />
           ))}
         </div>
       )}
+
       {/* Pagination */}
       {pagination.pages > 1 && (
         <div className="flex justify-center items-center gap-2 mt-12">
@@ -143,9 +145,7 @@ const EventsPage = () => {
                 <button
                   key={p}
                   onClick={() => handlePageChange(p)}
-                  className={`w-9 h-9 rounded-xl text-sm font-semibold transition-all ${
-                    p === currentPage ? 'bg-saffron-500 text-white shadow-saffron' : 'btn-secondary'
-                  }`}
+                  className={`w-9 h-9 rounded-xl text-sm font-semibold transition-all ${p === currentPage ? 'bg-saffron-500 text-white shadow-saffron' : 'btn-secondary'}`}
                 >
                   {p}
                 </button>
