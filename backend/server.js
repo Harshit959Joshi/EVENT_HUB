@@ -27,11 +27,17 @@ const notificationRoutes = require('./routes/notificationRoutes');
 const app = express();
 const server = http.createServer(app);
 
-// ─── Socket.io Setup ──────────────────────────────────────────────────────────
+// ─── Allowed origins ─────────────────────────────
+const allowedOrigins = [
+  'http://localhost:3000',                     // local dev
+  'https://event-hub-blush-seven.vercel.app'  // deployed frontend
+];
+
+// ─── Socket.io Setup ─────────────────────────────
 const io = new Server(server, {
   cors: {
-    origin: https://event-hub-blush-seven.vercel.app/ || 'http://localhost:3000',
-    methods: ['GET', 'POST'],
+    origin: allowedOrigins,
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true,
   },
 });
@@ -43,7 +49,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// ─── Security Middleware ───────────────────────────────────────────────────────
+// ─── Security Middleware ─────────────────────────
 app.use(helmet({ crossOriginResourcePolicy: false }));
 
 // Rate limiting: 100 requests per 15 minutes per IP
@@ -54,17 +60,25 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
-// ─── General Middleware ────────────────────────────────────────────────────────
+// ─── Express CORS ───────────────────────────────
 app.use(cors({
-  origin: https://event-hub-blush-seven.vercel.app/ || 'http://localhost:3000',
+  origin: function(origin, callback){
+    if(!origin) return callback(null, true); // allow non-browser requests like Postman
+    if(allowedOrigins.indexOf(origin) === -1){
+      return callback(new Error('Not allowed by CORS'), false);
+    }
+    return callback(null, true);
+  },
   credentials: true,
 }));
+
+// ─── General Middleware ─────────────────────────
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 if (process.env.NODE_ENV === 'development') app.use(morgan('dev'));
 
-// ─── API Routes ────────────────────────────────────────────────────────────────
+// ─── API Routes ─────────────────────────────────
 app.use('/api/auth', authRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/bookings', bookingRoutes);
@@ -78,7 +92,17 @@ app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'EventHub API is running 🚀', env: process.env.NODE_ENV });
 });
 
-// ─── Global Error Handler ──────────────────────────────────────────────────────
+// Root route
+app.get("/", (req, res) => {
+  res.send("EventHub API is running 🚀");
+});
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({ success: false, message: `Route ${req.originalUrl} not found` });
+});
+
+// ─── Global Error Handler ───────────────────────
 app.use((err, req, res, next) => {
   console.error('Error:', err.stack);
   const statusCode = err.statusCode || 500;
@@ -89,17 +113,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Root route (ADD THIS)
-app.get("/", (req, res) => {
-  res.send("EventHub API is running 🚀");
-});
-
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({ success: false, message: `Route ${req.originalUrl} not found` });
-});
-
-// ─── Database & Server Start ───────────────────────────────────────────────────
+// ─── Database & Server Start ────────────────────
 const PORT = process.env.PORT || 5000;
 mongoose
   .connect(process.env.MONGO_URI)
@@ -110,7 +124,7 @@ mongoose
     });
   })
   .catch((err) => {
-    console.error('❌ FULL ERROR:', err); // 👈 MUST ADD THIS
+    console.error('❌ FULL ERROR:', err);
     process.exit(1);
   });
 
