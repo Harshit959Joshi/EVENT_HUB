@@ -24,11 +24,13 @@ const HomePage = () => {
 
   useEffect(() => {
     eventsAPI.getFeatured()
-      .then(res => setFeatured(res.events))
+      .then(res => setFeatured(res.data || []))
+      .catch(() => setFeatured([]))
       .finally(() => setLoadingFeatured(false));
 
     eventsAPI.getAll({ sort: 'date', limit: 6 })
-      .then(res => setUpcoming(res.events))
+      .then(res => setUpcoming(res.data || []))
+      .catch(() => setUpcoming([]))
       .finally(() => setLoadingUpcoming(false));
   }, []);
 
@@ -143,7 +145,9 @@ const HomePage = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featured.map((event, i) => <EventCard key={event._id} event={event} index={i} />)}
+            {Array.isArray(featured) && featured.map((event, i) => (
+              <EventCard key={event._id} event={event} index={i} />
+            ))}
           </div>
         )}
       </section>
@@ -193,7 +197,9 @@ const HomePage = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {upcoming.map((event, i) => <EventCard key={event._id} event={event} index={i} />)}
+            {Array.isArray(upcoming) && upcoming.map((event, i) => (
+              <EventCard key={event._id} event={event} index={i} />
+            ))}
           </div>
         )}
       </section>
