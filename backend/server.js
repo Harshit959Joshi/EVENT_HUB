@@ -30,13 +30,13 @@ const server = http.createServer(app);
 // ─── Allowed origins ─────────────────────────────
 const allowedOrigins = [
   'http://localhost:3000',
-  'https://event-hub-blush-seven.vercel.app'
+  'https://event-hub-blush-seven.vercel.app',
 ];
 
 app.use(cors({
   origin: function(origin, callback){
-    if(!origin) return callback(null, true); // allow Postman or server requests
-    if(allowedOrigins.indexOf(origin) === -1){
+    if(!origin) return callback(null, true); // allow Postman / server requests
+    if(!allowedOrigins.includes(origin)){
       return callback(new Error('Not allowed by CORS'));
     }
     return callback(null, true);
