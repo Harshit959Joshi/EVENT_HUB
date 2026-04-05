@@ -30,8 +30,16 @@ const EventsPage = () => {
     setLoading(true);
     try {
       const res = await eventsAPI.getAll({ ...params, limit: 12 });
-      setEvents(res.events);
-      setPagination({ total: res.total, pages: res.pages, page: res.page });
+
+    // ✅ Ensure events is always an array
+    setEvents(res.events || res || []); 
+    
+    // ✅ Defensive pagination
+    setPagination({ 
+      total: res.total || (res?.length || 0),
+      pages: res.pages || 1,
+      page: res.page || 1
+    });
     } catch (err) {
       console.error(err);
     } finally {
@@ -86,14 +94,14 @@ const EventsPage = () => {
       </div>
 
       {/* Events grid */}
-      {loading ? (
+        {loading ? (
         <div className={viewMode === 'grid'
           ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'
           : 'flex flex-col gap-4'
         }>
           {Array.from({ length: 6 }).map((_, i) => <EventCardSkeleton key={i} />)}
         </div>
-      ) : events.length === 0 ? (
+      ) : (events?.length || 0) === 0 ? (   // <-- change here
         <EmptyState
           icon="🎭"
           title="No events found"
@@ -106,12 +114,11 @@ const EventsPage = () => {
           ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'
           : 'flex flex-col gap-4'
         }>
-          {events.map((event, i) => (
+          {events?.map((event, i) => (   // <-- change here
             <EventCard key={event._id} event={event} index={i} />
           ))}
         </div>
       )}
-
       {/* Pagination */}
       {pagination.pages > 1 && (
         <div className="flex justify-center items-center gap-2 mt-12">
