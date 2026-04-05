@@ -89,6 +89,11 @@ app.use((err, req, res, next) => {
   });
 });
 
+// Root route (ADD THIS)
+app.get("/", (req, res) => {
+  res.send("EventHub API is running 🚀");
+});
+
 // 404 handler
 app.use((req, res) => {
   res.status(404).json({ success: false, message: `Route ${req.originalUrl} not found` });
