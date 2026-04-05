@@ -26,7 +26,8 @@ export const SocketProvider = ({ children }) => {
     }
 
     const token = localStorage.getItem('token');
-    const socket = io(process.env.REACT_APP_SOCKET_URL || 'http://localhost:5000', {
+    
+    const socket = io(import.meta.env.VITE_API_URL, {
       auth: { token },
       transports: ['websocket', 'polling'],
     });
