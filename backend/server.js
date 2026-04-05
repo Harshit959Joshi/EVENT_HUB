@@ -29,18 +29,20 @@ const server = http.createServer(app);
 
 // ─── Allowed origins ─────────────────────────────
 const allowedOrigins = [
-  'http://localhost:3000',                     // local dev
-  'https://event-hub-blush-seven.vercel.app'  // deployed frontend
+  'http://localhost:3000',
+  'https://event-hub-blush-seven.vercel.app'
 ];
 
-// ─── Socket.io Setup ─────────────────────────────
-const io = new Server(server, {
-  cors: {
-    origin: allowedOrigins,
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    credentials: true,
+app.use(cors({
+  origin: function(origin, callback){
+    if(!origin) return callback(null, true); // allow Postman or server requests
+    if(allowedOrigins.indexOf(origin) === -1){
+      return callback(new Error('Not allowed by CORS'));
+    }
+    return callback(null, true);
   },
-});
+  credentials: true,
+}));
 initSocket(io);
 
 // Attach io instance to every request so controllers can emit events
