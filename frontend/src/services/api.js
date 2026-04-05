@@ -1,11 +1,8 @@
-/**
- * Axios API instance with auth interceptors
- */
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
 const API = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || '/api',
+  baseURL: 'https://event-hub-tty1.onrender.com', // ✅ fixed: must be a string
   withCredentials: true,
   timeout: 15000,
 });
